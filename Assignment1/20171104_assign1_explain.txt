@@ -1,0 +1,9 @@
+1. The awk command is used to check if a line has more then 35 characters. If that is true, then sed command is used to replace "in" with "in fact". \b is used to define the boundary so that occurences of "in" inside a word are not changed.
+
+2. The sed command is used to print all the lines. Then awk command checks if the third word of a line is "apathy" and is so, then it makes the third word "empathy".
+
+3. First we print the first 4 characters of each line using the substr command in awk. Then we print # in place of all characters from the 5th to the last character.
+
+4. Extract the first column of the file which contains the names of all the users. Then use awk to print the required output format where $0 refers to each individual line.
+
+5. To find the matching patterns, we generate the required regex. The first two letters are TS, then - or space, then we can have any 2 letters or numbers, then again - or space, then any 2 letters or alphabets and again 2 or 3 5 or S, then - or space and finally ending with 0 or O. For matching the exact patterns, I have used 'conditional or' inside the regex.

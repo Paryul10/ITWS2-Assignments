@@ -1,0 +1,392 @@
+{% extends "base.html" %} {% block content %}
+<div class="container" style="margin-top:3vw">
+    <h1 class="text-center text-success"><u>{{ group_name }}</u></h1><br><br>
+    <div class="row">
+        <div class="col-md-6">
+            <h3 class="text-center text-success">Members</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <tbody>
+                        {% for member in members_list %} {% if member != '' %}
+                        <tr>
+                            <td><img src="../../../static/{{ member.profile_pic }}" height="35px"></td>
+                            <td class="text-center text-success">
+                                <a href="../search/{{ member.username }}/profile">
+                                    <h3 class="text-success">{{ member.name }}</h3>
+                                </a>
+                            </td>
+                            <td class="text-center text-success">
+                                <h3 class="group_all_members">{{ member.username }}</h3>
+                            </td>
+                        </tr>
+                        {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+                <button class="btn btn-success btn-lg btn-block float-right" data-toggle="modal" data-target="#AddMemberModal">Add Member</button><br><br>
+                <div class="modal fade" id="AddMemberModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Add a Member</h3>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </div>
+                            <form action="{{ request.path }}" method="post" , enctype="multipart/form-data">
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" placeholder="username" name="person_to_be_added">
+                                    </div>
+                                    {% if message and message == "Not Your Friend" %}
+                                    <div class="alert alert-danger">
+                                        {{ message }}
+                                        <script>
+                                            $('#AddMemberModal').modal('show')
+                                        </script>
+                                    </div>
+                                    {% endif %}
+                                    <div class="modal-footer">
+                                        <button type="submit" name="Add_Person" class="btn btn-block btn-success">Add Person</button>
+                                    </div>
+                            </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3 class="text-center text-success">Transactions</h3><br><br>
+            <h4 class="text-center text-success">Unsettled Transactions</h4>
+            <div class="table-responsive">
+                <table class="table table-striped text-success">
+                    <thead>
+                        <tr>
+                            <th class="text-center">From</th>
+                            <th class="text-center">To</th>
+                            <th class="text-center">Amount</th>
+                            <th class="text-center">Settle</th>
+                            <th class="text-center">Created On</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transaction_list %} {% if transaction.settled == "0" %}
+                        <tr class="clickable btn-success text-success" data-toggle="collapse" data-target="#{{transaction.id}}">
+                            <td class="text-center">{{ transaction.from_member }}</td>
+                            <td class="text-center">{{ transaction.to_member }}</td>
+                            <td class="text-center">{{ transaction.amount }}</td>
+                            <td>
+                                <form action="{{ request.path }}" method="post">
+                                    <input type="text" name="primary_id" value="{{ transaction.id }}" class="form-control form-control-lg" style="display:none">
+                                    <button type="submit" name="settle" class="btn btn-success btn-sm btn-block bg-success">Settle</button>
+                                </form>
+                            </td>
+                            <td class="text-center">{{ transaction.date_created }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-success btn-sm btn-block float-right" data-toggle="modal" onclick="assignment('{{ transaction.from_member }}', '{{ transaction.to_member }}', '{{ transaction.amount }}', {{ transaction.id }})" data-target="#EditTransactionModal">Edit</button>
+                                    <form action="{{ request.path }}" method="post">
+                                        <input type="text" name="del_id" value="{{transaction.id}}" style="display:none;">
+                                        <button class="btn btn-success btn-sm" name="delete">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="6">
+                                <div id="{{ transaction.id }}" class="collapse">
+                                    <!-- Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere repudiandae, ipsa ex vero deleniti nostrum alias laborum aut hic adipisci sunt repellat cumque corrupti? Culpa vero animi accusantium recusandae perferendis.-->
+                                    {%for comment in transaction.comments.split(',')%} {%if comment%} {%set x = comment.split(' ')%}
+                                    <!--<h5>
+                                                {{ x[0] }}
+                                            </h5>
+                                            <h6>
+                                                {{ " ".join(x[1:]) }}
+                                            </h6>
+                                            <br>-->
+                                    <span class="badge badge-pill badge-success">
+                                                <h6><span class="font-weight-bold">{{ x[0] }}</span> {{ " ".join(x[1:]) }}</h6>
+                                    </span>
+                                    <br><br> {%endif%} {%endfor%}
+
+                                    <form action="{{ request.path }}" method="post">
+                                        <div class="input-group">
+                                            <input type="text" name="comment" class="form-control form-control-sm" placeholder="Add Comment">
+                                            <input type="text" name="submitting_user" style="display:none" value="{{ username }}">
+                                            <input type="text" name="transaction_id" style="display:none" value="{{ transaction.id }}">
+                                            <button type="submit" class="btn btn-sm btn-success bg-success" name="comment_add">Add Comment</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+
+            </div><br>
+            <h4 class="text-center text-success">Settled Transactions</h4>
+            <div class="table-responsive">
+                <table class="table table-striped text-success">
+                    <thead>
+                        <tr>
+                            <th class="text-center">From</th>
+                            <th class="text-center">To</th>
+                            <th class="text-center">Amount</th>
+                            <th class="text-center">Created On</th>
+                            <th class="text-center">Settled On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transaction_list %} {% if transaction.settled == "1" %}
+                        <tr class="clickable btn-success text-success" data-toggle="collapse" data-target="#{{ transaction.id }}">
+                            <td class="text-center">{{ transaction.from_member }}</td>
+                            <td class="text-center">{{ transaction.to_member }}</td>
+                            <td class="text-center">{{ transaction.amount }}</td>
+                            <td class="text-center">{{ transaction.date_created }}</td>
+                            <td class="text-center">{{ transaction.date_settled }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5">
+                                <div id="{{ transaction.id }}" class="collapse">
+                                    <!-- Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere repudiandae, ipsa ex vero deleniti nostrum alias laborum aut hic adipisci sunt repellat cumque corrupti? Culpa vero animi accusantium recusandae perferendis.-->
+                                    {%for comment in transaction.comments.split(',')%} {%if comment%} {%set x = comment.split(' ')%}
+                                    <!--<h5>
+                                                    {{ x[0] }}
+                                                </h5>
+                                                <h6>
+                                                    {{ " ".join(x[1:]) }}
+                                                </h6>
+                                                <br>-->
+                                    <span class="badge badge-pill badge-success">
+                                                    <h6><span class="font-weight-bold">{{ x[0] }}</span> {{ " ".join(x[1:]) }}</h6>
+                                    </span>
+                                    <br> <br>{%endif%} {%endfor%}
+
+                                    <form action="{{ request.path }}" method="post">
+                                        <div class="input-group">
+                                            <input type="text" name="comment" class="form-control form-control-sm" placeholder="Add Comment">
+                                            <input type="text" name="submitting_user" style="display:none" value="{{ username }}">
+                                            <input type="text" name="transaction_id" style="display:none" value="{{ transaction.id }}">
+                                            <button type="submit" class="btn btn-sm btn-success bg-success" name="comment_add">Add Comment</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-success btn-lg btn-block float-right" data-toggle="modal" data-target="#AddTransactionModal">Add Transaction</button><br><br>
+        </div>
+        <div class="modal fade" id="AddTransactionModal">
+            <div class="modal-dialog">
+
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Add a Transaction</h3>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-footer btn-group">
+                        <button class="btn btn-success btn-block" data-target="#UnequalSplit" data-toggle="collapse">Individual Transaction</button>
+                        <button class="btn btn-success" data-target="#EqualSplit" data-toggle="collapse">Equal Split</button>
+                    </div>
+
+                    <div class="collapse" id="UnequalSplit">
+                        <form action="{{ request.path }}" method="post" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <input type="username" name="from_member" class="form-control" placeholder="From" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="username" name="to_member" class="form-control" placeholder="To" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="amount" name="amount" class="form-control" placeholder="Amount" required>
+                                </div>
+                            </div>
+                            {% if message and message == "Not a group member" %}
+                            <div class="alert alert-danger">
+                                {{ message }}
+                                <script>
+                                    $('#AddTransactionModal').modal('show')
+                                </script>
+                            </div>
+                            {% endif %}
+                            <div class="modal-footer">
+                                <button type="submit" name="add_transaction" class="btn btn-success btn-block">Add this Transaction</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="collapse" id="EqualSplit">
+                        <form action="{{ request.path }}" method="post" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <input type="username" name="num_members_total" class="form-control" placeholder="Total People" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="username" name="total_amount" class="form-control" placeholder="Total Amount" required>
+                                </div>
+                                <div class="form-group form-inline">
+                                    <input type="amount" id="peeps_receiving_add" class="form-control" placeholder="People Receiving" required>
+                                    <button class="btn btn-success" onclick="Add_Person_to_People_Receiving();" type="button">Add Person</button>
+
+                                </div>
+                                <div class="form-group">
+                                    <h3 id="peeps_receiving">
+
+                                    </h3>
+                                    <input type="text" name="members_receiving" id="members_receiving" style="display:none;">
+                                </div>
+                                <!--<div class="form-group">
+                                    <input type="amount" name="num_paying" class="form-control" placeholder="Number of people paying" required>
+                                </div>-->
+                                <div class="form-group form-inline">
+                                    <input type="text" id='peeps_paying_add' class="form-control" placeholder="People Paying" required>
+                                    <button class="btn btn-success" onclick="Add_Person_to_People_Paying();" type="button">Add Person</button>
+                                </div>
+                                <div class="form-group">
+                                    <h3 id="peeps_paying">
+
+                                    </h3>
+                                    <input type="text" name="members_paying" id="members_paying" style="display:none;">
+                                </div>
+                                <div class="alert alert-danger text-danger" id="wrong_person" style="display:none;">
+
+                                </div>
+
+                            </div>
+                            {% if message and message == "Not a group member" %}
+                            <div class="alert alert-danger">
+                                {{ message }}
+                                <script>
+                                    $('#AddTransactionModal').modal('show')
+                                </script>
+                            </div>
+                            {% endif %}
+                            <div class="modal-footer">
+                                <button type="submit" name="add_equal_transaction" class="btn btn-success btn-block">Add this Transaction</button>
+                            </div>
+                        </form>
+                        <script>
+                            function Add_Person_to_People_Paying() {
+                                //console.log('HAHA');
+                                var x = document.getElementById('peeps_paying_add').value;
+                                //console.log(x);
+                                var flag = 0;
+                                m = document.getElementsByClassName('group_all_members');
+                                //console.log(document.getElementsByClassName('group_all_members'));
+                                for (var y = 0; y < m.length; y++) {
+                                    var x = document.getElementById('peeps_paying_add').value;
+                                    console.log(m[y].innerHTML);
+                                    console.log(x);
+                                    if (m[y].innerHTML == x) {
+                                        flag = 1;
+                                        //console.log(flag);
+                                        break;
+                                    };
+                                    //console.log(flag);
+                                };
+                                console.log(flag);
+                                if (flag == 0) {
+                                    console.log('haha');
+                                    document.getElementById('wrong_person').innerHTML = "This Person is Not a Member of the group";
+                                    document.getElementById('wrong_person').style.display = 'block';
+                                } else {
+                                    var x = document.getElementById('peeps_paying_add').value;
+                                    document.getElementById('wrong_person').style.display = 'none';
+                                    document.getElementById('peeps_paying').innerHTML = document.getElementById('peeps_paying').innerHTML + x + ',';
+                                    document.getElementById('members_paying').value = document.getElementById('peeps_paying').innerHTML;
+                                };
+                            };
+
+                            function Add_Person_to_People_Receiving() {
+                                var x = document.getElementById('peeps_receiving_add').value;
+                                var flag = 0;
+                                m = document.getElementsByClassName('group_all_members');
+                                //console.log(document.getElementsByClassName('group_all_members'));
+                                for (var y = 0; y < m.length; y++) {
+                                    var x = document.getElementById('peeps_receiving_add').value;
+                                    console.log(m[y].innerHTML);
+                                    console.log(x);
+                                    if (m[y].innerHTML == x) {
+                                        flag = 1;
+                                        //console.log(flag);
+                                        break;
+                                    };
+                                    //console.log(flag);
+                                };
+                                if (flag == 0) {
+                                    document.getElementById('wrong_person').innerHTML = "This Person is Not a Member of the group";
+                                    document.getElementById('wrong_person').style.display = 'block';
+                                } else {
+                                    var x = document.getElementById('peeps_receiving_add').value;
+                                    document.getElementById('wrong_person').style.display = 'none';
+                                    document.getElementById('peeps_receiving').innerHTML = document.getElementById('peeps_receiving').innerHTML + x + ',';
+                                    document.getElementById('members_receiving').value = document.getElementById('peeps_receiving').innerHTML;
+                                };
+                            };
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="EditTransactionModal">
+            <script>
+                //var from_user = document.getElementById('from');
+                //var to_user = document.getElementById('to');
+                //var amount_user = document.getElementById('amount');
+                //
+                function assignment(from, to, amount, id) {
+                    //console.log("HAHA");
+                    console.log(id);
+                    document.getElementById('from').placeholder = from;
+                    document.getElementById('to').placeholder = to;
+                    document.getElementById('amount').placeholder = amount;
+                    document.getElementById('from').value = from;
+                    document.getElementById('to').value = to;
+                    document.getElementById('amount').value = amount;
+                    document.getElementById('primary_id').value = id;
+                };
+            </script>
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit The Transaction</h3>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+
+                    <form action="{{ request.path }}" method="post" enctype="multipart/form-data">
+                        <input type="text" name="transaction_id" style="display:none" id="primary_id">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="username">From:</label>
+                                <input type="username" name="from_user" id="from" class="form-control" placeholder="From" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="username">To:</label>
+                                <input type="username" name="to_user" id="to" class="form-control" placeholder="To" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="amount">Amount:</label>
+                                <input type="amount" name="amount_user" id="amount" class="form-control" placeholder="Amount" required>
+                            </div>
+                        </div>
+                        {% if message and message == "Please Enter Correct Usernames" %}
+                        <div class="alert alert-danger">
+                            {{ message }}
+                            <script>
+                                $('#EditTransactionModal').modal('show')
+                            </script>
+                        </div>
+                        {% endif %}
+                        <div class="modal-footer">
+                            <button type="submit" name="edit_transaction" class="btn btn-success btn-block">Edit this Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

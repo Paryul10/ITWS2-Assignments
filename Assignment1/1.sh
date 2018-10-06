@@ -1,0 +1,1 @@
+awk '{if (length($0)>=35) print $0}' $1 | sed 's/\bin\b/in fact/g'

@@ -1,0 +1,1 @@
+sed -n p $1 | grep ".*" | awk '$3=="apathy"{$3="empathy"} 1'
